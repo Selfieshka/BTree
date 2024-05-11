@@ -10,20 +10,35 @@ import java.util.Set;
 public class Main {
     public static void main(String[] args) {
         Tree tree = new BTree();
-//        int[] arr = {30, 70, 8, 25, 40, 50, 76, 88, 1, 3, 7, 15, 21, 23, 26, 28, 35, 38, 42, 49, 56, 67, 71, 73, 75, 77, 85, 89, 97};
-        int[] arr = generateRandomIntArray();
-
+        int[] arr = generateRandomIntArray(10000, null);
+        int[] arr2 = randomSelectionElems(arr, 100);
+        int[] arr3 = randomSelectionElems(arr, 1000);
     }
 
-    private static int[] generateRandomIntArray() {
-        final int SIZE = 10000;
+    private static int[] generateRandomIntArray(int size, Integer upperBound) {
         Set<Integer> generatedNumbers = new HashSet<>();
         Random random = new Random();
-
-        while (generatedNumbers.size() < SIZE) {
-            generatedNumbers.add(random.nextInt());
+        if (upperBound == null) {
+            while (generatedNumbers.size() < size) {
+                generatedNumbers.add(random.nextInt());
+            }
+        } else {
+            while (generatedNumbers.size() < size) {
+                generatedNumbers.add(random.nextInt(upperBound));
+            }
         }
 
         return generatedNumbers.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    private static int[] randomSelectionElems(int[] arr, int countElems) {
+        int[] indexes = generateRandomIntArray(countElems, arr.length);
+        int[] randomElems = new int[countElems];
+
+        for (int i = 0; i < countElems; i++) {
+            randomElems[i] = arr[indexes[i]];
+        }
+
+        return randomElems;
     }
 }
