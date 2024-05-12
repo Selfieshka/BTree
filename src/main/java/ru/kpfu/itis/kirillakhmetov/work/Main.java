@@ -40,7 +40,7 @@ public class Main {
         System.out.println("Среднее время для поиска: " + getAverageValue(timesFind) + " нс.");
         System.out.println("Среднее количество операций для поиска: " + getAverageValue(countOperationFind));
 
-        // Считаем поиск
+        // Считаем удаление
         int[] elemsForDelete = randomSelectionElems(arr, 1000);
         long[] timesDelete = new long[1000];
         long[] countOperationDelete = new long[1000];
