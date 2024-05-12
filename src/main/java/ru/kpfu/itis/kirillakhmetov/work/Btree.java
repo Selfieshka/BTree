@@ -103,24 +103,6 @@ public class BTree {
         return a >= 2;
     }
 
-    public void show() {
-        show(root, 0);
-    }
-
-    private void show(Node x, int l) {
-        System.out.println("Уровень " + l);
-        for (int i = 0; i < x.getDegree(); i++) {
-            System.out.print(x.getKeys()[i] + " ");
-        }
-        System.out.println();
-        l++;
-        if (!x.isLeaf()) {
-            for (int i = 0; i < x.getDegree() + 1; i++) {
-                show(x.getChildren()[i], l);
-            }
-        }
-    }
-
     private Node search(Node x, int key) {
         int i = 0;
         counterOperations++;
@@ -157,200 +139,239 @@ public class BTree {
         return node != null;
     }
 
-//    @Override
-//    public void remove(int key) {
-//        Node node = search(root, key);
-//        if (node != null) {
-//            if (node.isLeaf() && node.getDegree() > (order - 1)) {
-//                node.removeKey(key);
-//                System.out.println(Arrays.toString(node.getKeys()));
-//            }
-//        } else {
-//            throw new RuntimeException("Элемент с таким значением не найден");
-//        }
-//    }
 
     private void remove(Node node, int key) {
         int pos = node.find(key);
+        counterOperations++;
         if (pos != -1) {
             if (node.isLeaf()) {
                 int i = 0;
                 for (i = 0; i < node.getDegree() && node.getKeys()[i] != key; i++) {
+                    counterOperations += 5;
                 }
-                ;
                 for (; i < node.getDegree(); i++) {
                     if (i != 2 * order - 2) {
                         node.getKeys()[i] = node.getKeys()[i + 1];
+                        counterOperations += 3;
                     }
+                    counterOperations++;
                 }
                 node.setDegree(node.getDegree() - 1);
+                counterOperations += 3;
                 return;
             }
             if (!node.isLeaf()) {
-
                 Node pred = node.getChildren()[pos];
                 int predKey = 0;
+                counterOperations += 3;
                 if (pred.getDegree() >= order) {
-                    for (;;) {
+                    for (; ; ) {
+                        counterOperations++;
                         if (pred.isLeaf()) {
-                            System.out.println(pred.getDegree());
                             predKey = pred.getKeys()[pred.getDegree() - 1];
+                            counterOperations += 3;
                             break;
                         } else {
                             pred = pred.getChildren()[pred.getDegree()];
+                            counterOperations += 3;
                         }
                     }
                     remove(pred, predKey);
                     node.getKeys()[pos] = predKey;
+                    counterOperations += 3;
                     return;
                 }
 
                 Node nextNode = node.getChildren()[pos + 1];
+                counterOperations++;
                 if (nextNode.getDegree() >= order) {
                     int nextKey = nextNode.getKeys()[0];
+                    counterOperations++;
                     if (!nextNode.isLeaf()) {
                         nextNode = nextNode.getChildren()[0];
-                        for (;;) {
+                        for (; ; ) {
+                            counterOperations++;
                             if (nextNode.isLeaf()) {
                                 nextKey = nextNode.getKeys()[nextNode.getDegree() - 1];
+                                counterOperations += 4;
                                 break;
                             } else {
                                 nextNode = nextNode.getChildren()[nextNode.getDegree()];
+                                counterOperations += 3;
                             }
                         }
+                        counterOperations++;
                     }
                     remove(nextNode, nextKey);
                     node.getKeys()[pos] = nextKey;
+                    counterOperations += 3;
                     return;
                 }
 
                 int temp = pred.getDegree() + 1;
-                pred.getKeys()[pred.getDegree() + 1] = node.getKeys()[pos];
+                pred.getKeys()[pred.getDegree()] = node.getKeys()[pos];
+                pred.setDegree(pred.getDegree() + 1);
+                counterOperations += 9;
                 for (int i = 0, j = pred.getDegree(); i < nextNode.getDegree(); i++) {
                     pred.getKeys()[j++] = nextNode.getKeys()[i];
                     pred.setDegree(pred.getDegree() + 1);
+                    counterOperations += 9;
                 }
                 for (int i = 0; i < nextNode.getDegree() + 1; i++) {
                     pred.getChildren()[temp++] = nextNode.getChildren()[i];
+                    counterOperations += 6;
                 }
 
                 node.getChildren()[pos] = pred;
+                counterOperations++;
                 for (int i = pos; i < node.getDegree(); i++) {
                     if (i != 2 * order - 2) {
                         node.getKeys()[i] = node.getKeys()[i + 1];
+                        counterOperations += 3;
                     }
+                    counterOperations += 2;
                 }
                 for (int i = pos + 1; i < node.getDegree() + 1; i++) {
                     if (i != 2 * order - 1) {
                         node.getChildren()[i] = node.getChildren()[i + 1];
+                        counterOperations += 3;
                     }
+                    counterOperations++;
                 }
                 node.setDegree(node.getDegree() - 1);
+                counterOperations++;
                 if (node.getDegree() == 0) {
                     if (node == root) {
                         root = node.getChildren()[0];
                     }
                     node = node.getChildren()[0];
+                    counterOperations += 3;
                 }
                 remove(pred, key);
-                return;
+                counterOperations++;
             }
         } else {
             for (pos = 0; pos < node.getDegree(); pos++) {
                 if (node.getKeys()[pos] > key) {
+                    counterOperations += 2;
                     break;
                 }
+                counterOperations += 2;
             }
             Node tmp = node.getChildren()[pos];
             if (tmp.getDegree() >= order) {
                 remove(tmp, key);
+                counterOperations += 2;
                 return;
             }
-            Node nb = null;
-            int devider = -1;
-
-            if (pos != node.getDegree() && node.getChildren()[pos + 1].getDegree() >= order) {
-                devider = node.getKeys()[pos];
-                nb = node.getChildren()[pos + 1];
-                node.getKeys()[pos] = nb.getKeys()[0];
-                tmp.getKeys()[tmp.getDegree() + 1] = devider;
-                tmp.getChildren()[tmp.getDegree()] = nb.getChildren()[0];
-                for (int i = 1; i < nb.getDegree(); i++) {
-                    nb.getKeys()[i - 1] = nb.getKeys()[i];
-                }
-                for (int i = 1; i <= nb.getDegree(); i++) {
-                    nb.getChildren()[i - 1] = nb.getChildren()[i];
-                }
-                nb.setDegree(nb.getDegree() - 1);
-                remove(tmp, key);
-                return;
-            } else if (pos != 0 && node.getChildren()[pos - 1].getDegree() >= order) {
-
-                devider = node.getKeys()[pos - 1];
-                nb = node.getChildren()[pos - 1];
-                node.getKeys()[pos - 1] = nb.getKeys()[nb.getDegree() - 1];
-                Node child = nb.getChildren()[nb.getDegree()];
-                nb.setDegree(nb.getDegree());
-
-                for (int i = tmp.getDegree(); i > 0; i--) {
-                    tmp.getKeys()[i] = tmp.getKeys()[i - 1];
-                }
-                tmp.getKeys()[0] = devider;
-                for (int i = tmp.getDegree() + 1; i > 0; i--) {
-                    tmp.getChildren()[i] = tmp.getChildren()[i - 1];
-                }
-                tmp.getChildren()[0] = child;
-                tmp.setDegree(tmp.getDegree() + 1);
-                remove(tmp, key);
-                return;
-            } else {
-                Node lt = null;
-                Node rt = null;
-                boolean last = false;
-                if (pos != node.getDegree()) {
+            if (true) {
+                Node nb = null;
+                int devider = -1;
+                counterOperations += 2;
+                if (pos != node.getDegree() && node.getChildren()[pos + 1].getDegree() >= order) {
                     devider = node.getKeys()[pos];
-                    lt = node.getChildren()[pos];
-                    rt = node.getChildren()[pos + 1];
-                } else {
-                    devider = node.getKeys()[pos - 1];
-                    rt = node.getChildren()[pos];
-                    lt = node.getChildren()[pos - 1];
-                    last = true;
-                    pos--;
-                }
-                for (int i = pos; i < node.getDegree() - 1; i++) {
-                    node.getKeys()[i] = node.getKeys()[i + 1];
-                }
-                for (int i = pos + 1; i < node.getDegree(); i++) {
-                    node.getChildren()[i] = node.getChildren()[i + 1];
-                }
-                node.setDegree(node.getDegree() - 1);
-                lt.getKeys()[lt.getDegree() + 1] = devider;
+                    nb = node.getChildren()[pos + 1];
+                    node.getKeys()[pos] = nb.getKeys()[0];
+                    tmp.getKeys()[tmp.getDegree()] = devider;
+                    tmp.setDegree(tmp.getDegree() + 1);
+                    tmp.getChildren()[tmp.getDegree()] = nb.getChildren()[0];
+                    counterOperations += 20;
+                    for (int i = 1; i < nb.getDegree(); i++) {
+                        nb.getKeys()[i - 1] = nb.getKeys()[i];
+                        counterOperations += 3;
+                    }
+                    for (int i = 1; i <= nb.getDegree(); i++) {
+                        nb.getChildren()[i - 1] = nb.getChildren()[i];
+                        counterOperations += 3;
+                    }
+                    nb.setDegree(nb.getDegree() - 1);
+                    remove(tmp, key);
+                    counterOperations += 3;
+                } else if (pos != 0 && node.getChildren()[pos - 1].getDegree() >= order) {
 
-                for (int i = 0, j = lt.getDegree(); i < rt.getDegree() + 1; i++, j++) {
-                    if (i < rt.getDegree()) {
-                        lt.getKeys()[j] = rt.getKeys()[i];
+                    devider = node.getKeys()[pos - 1];
+                    nb = node.getChildren()[pos - 1];
+                    node.getKeys()[pos - 1] = nb.getKeys()[nb.getDegree() - 1];
+                    Node child = nb.getChildren()[nb.getDegree()];
+
+                    nb.setDegree(nb.getDegree() - 1);
+                    counterOperations += 14;
+                    for (int i = tmp.getDegree(); i > 0; i--) {
+                        tmp.getKeys()[i] = tmp.getKeys()[i - 1];
+                        counterOperations += 3;
                     }
-                    lt.getChildren()[j] = rt.getChildren()[i];
-                }
-                lt.setDegree(lt.getDegree() + rt.getDegree());
-                if (node.getDegree() == 0) {
-                    if (node == root) {
-                        root = node.getChildren()[0];
+                    tmp.getKeys()[0] = devider;
+                    counterOperations++;
+                    for (int i = tmp.getDegree() + 1; i > 0; i--) {
+                        tmp.getChildren()[i] = tmp.getChildren()[i - 1];
+                        counterOperations += 3;
                     }
-                    node = node.getChildren()[0];
+                    tmp.getChildren()[0] = child;
+                    tmp.setDegree(tmp.getDegree() + 1);
+                    remove(tmp, key);
+                    counterOperations += 5;
+                } else {
+                    Node lt = null;
+                    Node rt = null;
+                    boolean last = false;
+                    counterOperations += 3;
+                    if (pos != node.getDegree()) {
+                        devider = node.getKeys()[pos];
+                        lt = node.getChildren()[pos];
+                        rt = node.getChildren()[pos + 1];
+                        counterOperations += 5;
+                    } else {
+                        devider = node.getKeys()[pos - 1];
+                        rt = node.getChildren()[pos];
+                        lt = node.getChildren()[pos - 1];
+                        last = true;
+                        pos--;
+                        counterOperations += 7;
+                    }
+                    for (int i = pos; i < node.getDegree() - 1; i++) {
+                        node.getKeys()[i] = node.getKeys()[i + 1];
+                        counterOperations += 3;
+                    }
+                    for (int i = pos + 1; i < node.getDegree(); i++) {
+                        node.getChildren()[i] = node.getChildren()[i + 1];
+                        counterOperations += 3;
+                    }
+                    node.setDegree(node.getDegree() - 1);
+                    lt.getKeys()[lt.getDegree()] = devider;
+                    lt.setDegree(lt.getDegree() + 1);
+                    counterOperations += 8;
+                    for (int i = 0, j = lt.getDegree(); i < rt.getDegree() + 1; i++, j++) {
+                        if (i < rt.getDegree()) {
+                            lt.getKeys()[j] = rt.getKeys()[i];
+                            counterOperations += 2;
+                        }
+                        lt.getChildren()[j] = rt.getChildren()[i];
+                        counterOperations += 5;
+                    }
+                    lt.setDegree(lt.getDegree() + rt.getDegree());
+                    counterOperations++;
+                    if (node.getDegree() == 0) {
+                        if (node == root) {
+                            root = node.getChildren()[0];
+                            counterOperations++;
+                        }
+                        node = node.getChildren()[0];
+                        counterOperations += 2;
+                    }
+                    remove(lt, key);
+                    counterOperations++;
                 }
-                remove(lt, key);
-                return;
             }
         }
     }
 
     public void remove(int key) {
         Node x = search(root, key);
+        counterOperations++;
         if (x == null) {
             return;
         }
+        counterOperations++;
         remove(root, key);
     }
 

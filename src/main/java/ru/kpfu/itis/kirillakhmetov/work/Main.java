@@ -1,6 +1,5 @@
 package ru.kpfu.itis.kirillakhmetov.work;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -9,12 +8,8 @@ public class Main {
     public static void main(String[] args) {
         BTree tree = new BTree();
         long start, end;
-        int[] test = {8, 9, 10};
-        BTree testtree = new BTree();
-        for(int el : test) {
-            testtree.add(el);
-        }
-        testtree.show();
+
+
         // Считаем добавление
         int[] arr = generateRandomIntArray(10000, null);
         long[] timesAddition = new long[10000];
@@ -51,7 +46,7 @@ public class Main {
         long[] countOperationDelete = new long[1000];
         for (int i = 0; i < elemsForDelete.length; i++) {
             start = System.nanoTime();
-            tree.delete(elemsForDelete[i]);
+            tree.remove(elemsForDelete[i]);
             end = System.nanoTime();
             timesDelete[i] = end - start;
             countOperationDelete[i] = tree.getCounterOperations();
